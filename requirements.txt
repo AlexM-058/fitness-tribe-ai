@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+requests
+google-generativeai
+pytest
+httpx
+python-multipart
+pillow
+pre-commit

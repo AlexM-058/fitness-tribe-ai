@@ -13,12 +13,6 @@ import logging
 import re
 
 
-def clean_response_text(response_text: str) -> str:
-    # Strip unnecessary markdown or whitespace that might have been included
-    clean_text = response_text.strip("```json").strip("```").strip()
-    return clean_text
-
-
 def extract_first_json(text):
     """
     Extrage primul obiect JSON valid dintr-un text, chiar dacă există text suplimentar sau delimitatori markdown.
@@ -53,15 +47,13 @@ def generate_nutrition_plan(profile_data: ProfileData) -> NutritionPlan:
         if not result_text:
             raise HTTPException(status_code=500, detail="No response from Gemini API")
 
-        clean_result_text = clean_response_text(result_text)
-
         try:
-            json_str = extract_first_json(clean_result_text)
+            json_str = extract_first_json(result_text)
             result = json.loads(json_str)
         except Exception as e:
             logging.error(f"JSON Decode Error (Provide Nutrition Advice): {str(e)}")
             logging.error(
-                f"Cleaned Result Text (Provide Nutrition Advice) on JSON Decode Error: {clean_result_text}"
+                f"Raw Gemini Response (Provide Nutrition Advice) on JSON Decode Error: {result_text}"
             )
             raise HTTPException(status_code=500, detail=f"JSON Decode Error: {str(e)}")
 

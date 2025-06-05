@@ -65,7 +65,27 @@ def generate_nutrition_plan(profile_data: ProfileData) -> NutritionPlan:
         }
 
         def parse_meal_options(meal_data):
-            return [MealOption(**meal) for meal in meal_data]
+            valid_meals = []
+            for meal in meal_data:
+                # Corectează ingredientele cu calorii non-int
+                if "ingredients" in meal:
+                    for ing in meal["ingredients"]:
+                        try:
+                            ing["calories"] = int(ing["calories"])
+                        except Exception:
+                            ing["calories"] = 0  # sau poți da continue pentru a ignora ingredientul
+                # Corectează total_calories dacă nu e int
+                if "total_calories" in meal:
+                    try:
+                        meal["total_calories"] = int(meal["total_calories"])
+                    except Exception:
+                        meal["total_calories"] = 0
+                try:
+                    valid_meals.append(MealOption(**meal))
+                except Exception as e:
+                    logging.error(f"Validation error for MealOption: {meal} | Error: {e}")
+                    continue
+            return valid_meals
 
         meal_plan = MealPlan(
             breakfast=parse_meal_options(result["meal_plan"]["breakfast"]),

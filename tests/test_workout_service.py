@@ -1,4 +1,4 @@
-git remote add origin https://github.com/AlexM-058/fitness-tribe-ai-main.gitimport json
+import json
 from fastapi.testclient import TestClient
 from unittest.mock import patch
 from app.main import app

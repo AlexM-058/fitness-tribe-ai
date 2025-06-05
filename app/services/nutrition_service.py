@@ -10,12 +10,23 @@ from app.schemas.nutrition import (
 from fastapi import HTTPException
 import json
 import logging
+import re
 
 
 def clean_response_text(response_text: str) -> str:
     # Strip unnecessary markdown or whitespace that might have been included
     clean_text = response_text.strip("```json").strip("```").strip()
     return clean_text
+
+
+def extract_first_json(text):
+    """
+    Extrage primul obiect JSON valid dintr-un text.
+    """
+    matches = re.findall(r"\{(?:[^{}]|(?R))*\}", text, re.DOTALL)
+    if matches:
+        return matches[0]
+    raise ValueError("No JSON object found in response.")
 
 
 def generate_nutrition_plan(profile_data: ProfileData) -> NutritionPlan:
@@ -25,13 +36,12 @@ def generate_nutrition_plan(profile_data: ProfileData) -> NutritionPlan:
         if not result_text:
             raise HTTPException(status_code=500, detail="No response from Gemini API")
 
-        # Clean the result_text to remove Markdown formatting
         clean_result_text = clean_response_text(result_text)
 
-        # Directly parse the cleaned result text
         try:
-            result = json.loads(clean_result_text)
-        except json.JSONDecodeError as e:
+            json_str = extract_first_json(clean_result_text)
+            result = json.loads(json_str)
+        except Exception as e:
             logging.error(f"JSON Decode Error (Provide Nutrition Advice): {str(e)}")
             logging.error(
                 f"Cleaned Result Text (Provide Nutrition Advice) on JSON Decode Error: {clean_result_text}"

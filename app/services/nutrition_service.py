@@ -21,11 +21,28 @@ def clean_response_text(response_text: str) -> str:
 
 def extract_first_json(text):
     """
-    Extrage primul obiect JSON valid dintr-un text.
+    Extrage primul obiect JSON valid dintr-un text, chiar dacă există text suplimentar sau delimitatori markdown.
     """
-    matches = re.findall(r"\{(?:[^{}]|(?R))*\}", text, re.DOTALL)
-    if matches:
-        return matches[0]
+    # Elimină delimitatorii de tip ```json sau ```
+    text = re.sub(r"```json|```", "", text, flags=re.IGNORECASE).strip()
+    # Găsește primul bloc JSON valid folosind o stivă pentru acolade
+    stack = []
+    start = None
+    for i, c in enumerate(text):
+        if c == '{':
+            if not stack:
+                start = i
+            stack.append(c)
+        elif c == '}':
+            if stack:
+                stack.pop()
+                if not stack and start is not None:
+                    candidate = text[start:i+1]
+                    try:
+                        json.loads(candidate)
+                        return candidate
+                    except Exception:
+                        continue
     raise ValueError("No JSON object found in response.")
 
 
